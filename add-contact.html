@@ -1,0 +1,73 @@
+<html>
+    <head>
+        <meta carset="UTF-8">
+        <title></title>
+    </head>
+        <body>
+            <form id="editForm">
+                <!--the key value pair is for example, the key is "firstname" and the value is what the user types in-->
+                <label for="firstname">First name</label>
+                <input type="text" name="firstname" id="firstname"><br/>
+                <label for="lastname">Last name</label>
+                <input type="text" name="lastname" id="lastname"><br/>
+                <label for="mobile">Mobile</label>
+                <input type="text" name="mobile" id="mobile"><br/>
+                <label for="email">Email</label>
+                <input type="text" name="email" id="email"><br/>
+                <label for="avatar">Select a file</label>
+                <input type="file" name="avatar" id="avatar"><br/>
+                <button type="submit" id="submitForm">Submit</button>
+            </form>
+            <br/>
+            <button id="homeLink" type="button">Home</button>
+            
+            <script src="config.js"></script>
+            
+            <script>
+                
+                //adding event listener(after functions have been created) 
+                document.getElementById("submitForm").addEventListener('click', submitForm);
+                document.getElementById("homeLink").addEventListener('click', homeLink);
+                
+                //Set parameter e to prevent default behavior(default in this case is when pressing the submit button and the page reloads-this prevents page reload)
+                function submitForm(e){
+                    e.preventDefault();
+                    
+                    const form = new FormData(document.querySelector('#editForm'));
+                    
+                    //adding another key value pair which is the apiKey coming from config.js
+                    form.append('apiKey', apiKey);
+                    
+                    //Summary of what the following code does: this code sends a new contact's data to your server via a POST request, expecting a JSON response.
+                    
+                    fetch(rootPath + 'controller/insert-contact/', { //Makes a network request to the URL, points to a backend endpoint that will handle inserting a new contact into your database.
+                        
+                        method:'POST',//used for creating or submitting new data.Sending data to the server (not requesting it like with GET)
+                        
+                        headers:{'Accept': 'application/json, *.*'},//Tells the server: "I expect a response in JSON format, but I’ll accept anything if needed."
+                        
+                        body: form //formData object, actual info sent to the server
+                    })
+                    .then(function(response){
+                        return response.text();
+                    })
+                    .then(function(data){
+                        if(data =="1"){
+                            alert("Contact added.");
+                            homeLink()
+                        } else{
+                            alert(data);
+                            homeLink()
+                        }
+                    })
+                }
+                
+                function homeLink(){
+                    window.open("index.html", "_self"); //Buitl-in function that opens a new window (index.html) _self means that index.html must open up on this same tab
+                }
+                
+            </script>
+        
+        </body>
+</html>
+

@@ -1,0 +1,143 @@
+<html>
+    <head>
+        <meta carset="UTF-8">
+        <title></title>
+    </head>
+        <body onload = "getContact()">
+            <div id="avatarImage"></div>
+            
+            <form id="editForm">
+                <!--the key value pair is for example, the key is "firstname" and the value is what the user types in-->
+                <label for="firstname">First name</label>
+                <input type="text" name="firstname" id="firstname" readonly><br/>
+                <label for="lastname">Last name</label>
+                <input type="text" name="lastname" id="lastname" readonly><br/>
+                <label for="mobile">Mobile</label>
+                <input type="text" name="mobile" id="mobile" readonly><br/>
+                <label for="email">Email</label>
+                <input type="text" name="email" id="email" readonly><br/>
+                <label for="avatar" id="avatarLabel" hidden>Change profile image</label><br/>
+                <input type="file" name="avatar" id="avatar" hidden><br/><br/>
+                <button type="submit" id="submitForm" hidden>Submit</button>
+            </form>
+            <br/>
+            <button id="homeLink" type="button">Home</button>
+            <button id="editContact" type="button">Edit</button>
+            <button id="deleteContact" type="button">Delete</button>
+            
+            <script src="config.js"></script>
+            
+            <script>
+                var contactData = null; // Store contact info globally so it can be used in other functions (like deleteContact)
+                var id = getId(); //will store return from getId function inside the getId var when script loads, var getId is global (out of function getId)
+                //console.log("The id is:" + id); used to test script for displaying id
+                document.getElementById("homeLink").addEventListener('click', homeLink);
+                document.getElementById("editContact").addEventListener('click', editContact);
+                document.getElementById("submitForm").addEventListener('click', submitForm);
+                document.getElementById("deleteContact").addEventListener('click', deleteContact);
+                
+                
+                function getId(){
+                    var url = window.location.href; //returns full url of window currently open
+                    var pos = url.search("="); //displays the number of the postion of the = sign in the url 
+                    var id = url.slice(pos + 1); // slices/cuts entire url leaving whatever is after the = sign (id)
+                    return id;
+                }
+                
+                function getContact(){
+                    fetch(rootPath + 'controller/get-contacts/?id='+ id)
+                    .then(function(response){
+                        return response.json();
+                    })
+                    .then (function(data){
+                        displayOutput(data);
+                    })
+                }
+                
+                function homeLink(){
+                    window.open("index.html","_self");
+                }
+                
+                function displayOutput(data){
+                    contactData = data[0]; // Save the fetched contact data in the global variable. If contactData was not used for the purpose of displaying firstname and lastname in the popup when deleting, it would have been simpler to use data[0] to fetch data
+                    
+                    const avatarImg = `
+                          <img src = "${rootPath}/controller/uploads/${contactData.avatar}" width = "200"/>
+`
+                    document.getElementById("avatarImage").innerHTML = avatarImg;
+                    document.getElementById("firstname").value = contactData.firstname;
+                    document.getElementById("lastname").value = contactData.lastname;
+                    document.getElementById("mobile").value = contactData.mobile;
+                    document.getElementById("email").value = contactData.email;
+                }
+                
+                function editContact(){
+                    document.getElementById("firstname").readOnly = false;
+                    document.getElementById("lastname").readOnly = false;
+                    document.getElementById("mobile").readOnly = false;
+                    document.getElementById("email").readOnly = false;
+                    document.getElementById("avatar").hidden = false;
+                    document.getElementById("submitForm").hidden = false;
+                    
+                }
+                
+                function submitForm(e){
+                    e.preventDefault();
+                    
+                    const form = new FormData(document.querySelector("#editForm"));
+                    form.append('apiKey', apiKey);
+                    form.append('id', id);
+                    
+                     fetch(rootPath + 'controller/edit-contact/', {
+                        
+                        method:'POST',
+                        //headers:{'Accept': 'application/json, *.*'}, commented out so the browser automatically sets the headers for FormData
+                        body: form 
+                    })
+                    .then(function(response){
+                        return response.text();
+                    })
+                    .then(function(data){
+                        if(data =="1"){ //"1"=successful submission
+                            alert("Contact edited.");
+                            homeLink()
+                        } else{
+                            alert(data);
+                            homeLink()
+                        }
+                    })
+                    
+                }
+                
+                function deleteContact(){
+                    if (!contactData) {
+                     alert("Contact information is not loaded yet.");
+                    return;
+                    }
+
+                   const fullName = contactData.firstname + " " + contactData.lastname; // Use the global contactData variable to get the contact's name
+                   const confirmDelete = confirm("Are you sure you want to delete " + fullName + "?");
+
+                   if (confirmDelete) {
+                    fetch(rootPath + 'controller/delete-contact/?id=' + id)
+                   .then(function(response){
+                       return response.text();
+                   })
+                   .then(function(data){
+                   if (data == "1") {
+                        homeLink();
+                   } else {
+                       alert(data);
+            }
+        });
+    }
+}
+
+                
+                
+
+                
+            </script>
+        
+        </body>
+</html>
